@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>WÁE RUA — Portal Warga</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ungu-utama: #4b1eb8;
+      --ungu-gelap: #34118a;
+      --ungu-aksen: #6c3ce9;
+      --bg-app: #f4f2fa;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #dcd6ee;
+      margin: 0;
+      padding: 0;
+    }
+    .phone-frame {
+      background-color: var(--bg-app);
+      min-height: 100dvh;
+      max-width: 440px;
+      margin: 0 auto;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(36, 12, 92, 0.22);
+      padding-bottom: 92px;
+    }
+    .hero-purple {
+      background: linear-gradient(155deg, #5624cf 0%, #3d14a3 65%, #2d0c7e 100%);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+    }
+    .nav-fab {
+      background: linear-gradient(145deg, #6d3ef0, #4618b5);
+      box-shadow: 0 8px 20px rgba(75, 30, 184, 0.45);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+  <div class="phone-frame flex flex-col">
+
+    <!-- TAB 1: BERANDA -->
+    <section id="tab-home" class="block">
+      <div class="hero-purple text-white px-5 pt-5 pb-14">
+        <div class="flex items-center justify-between gap-2 mb-4">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center font-extrabold text-sm shrink-0">
+              WR
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] text-purple-200 font-medium">Komunitas Wáe Rua</p>
+              <h1 id="homeNamaWarga" class="text-sm font-extrabold truncate">Semua Warga</h1>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="muatDataWarga()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-sm" title="Refresh">
+              ↻
+            </button>
+            <button onclick="bukaTab('statistik')" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-sm" title="Statistik">
+              🔔
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <select id="selectPestaWarga" onchange="renderWarga()"
+            class="w-full bg-white/15 border border-white/25 text-white text-xs font-bold rounded-xl px-3 py-2 focus:outline-none">
+            <option value="" class="text-slate-900">Memuat jadwal pesta...</option>
+          </select>
+        </div>
+
+        <div class="text-center pt-1">
+          <p class="text-xs text-purple-200 font-medium">Cash Terkumpul Sesi Ini</p>
+          <p id="heroCash" class="text-3xl font-extrabold tracking-tight mt-1">Rp 0</p>
+          <p id="heroSubPesta" class="text-[11px] text-purple-200/90 mt-1">Beras: 0 Kg • Sudah Setor: 0 / 0</p>
+        </div>
+      </div>
+
+      <!-- Aksi Cepat -->
+      <div class="px-4 -mt-9">
+        <div class="bg-white rounded-2xl shadow-md border border-purple-100 px-2 py-3.5 grid grid-cols-4 gap-1 text-center">
+          <button onclick="bukaTab('statistik')" class="flex flex-col items-center gap-1.5">
+            <span class="w-10 h-10 rounded-xl bg-purple-50 text-[#4b1eb8] flex items-center justify-center text-base font-bold">📊</span>
+            <span class="text-[11px] font-bold text-slate-700">Rekap</span>
+          </button>
+          <button onclick="bukaTab('warga')" class="flex flex-col items-center gap-1.5">
+            <span class="w-10 h-10 rounded-xl bg-purple-50 text-[#4b1eb8] flex items-center justify-center text-base font-bold">👥</span>
+            <span class="text-[11px] font-bold text-slate-700">Setoran</span>
+          </button>
+          <button onclick="bukaTab('pejabat')" class="flex flex-col items-center gap-1.5">
+            <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-base font-bold">📢</span>
+            <span class="text-[11px] font-bold text-slate-700">Belum</span>
+          </button>
+          <button onclick="bukaTab('struk')" class="flex flex-col items-center gap-1.5">
+            <span class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-base font-bold">🧾</span>
+            <span class="text-[11px] font-bold text-slate-700">Riwayat</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid Menu Fitur Warga -->
+      <div class="px-4 mt-5">
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-sm font-extrabold text-slate-900">Info & Rekap Pesta</h2>
+          <span class="text-[11px] font-bold text-[#4b1eb8]">Standar 150rb • 5kg</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-purple-100/80 grid grid-cols-4 gap-y-4 gap-x-2 text-center">
+          <button onclick="bukaTab('warga')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">💵</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Cash Warga</span>
+          </button>
+          <button onclick="bukaTab('statistik')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">🌾</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Total Beras</span>
+          </button>
+          <button onclick="bukaTab('tindis')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">⚖️</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Baku Tindis</span>
+          </button>
+          <button onclick="bukaTab('pejabat')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">🧑‍💼</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Panitia</span>
+          </button>
+          <button onclick="bukaTab('pejabat')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">⏳</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Belum Bayar</span>
+          </button>
+          <button onclick="bukaTab('struk')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-purple-50 text-[#4b1eb8] flex items-center justify-center text-lg">📄</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Bukti Setor</span>
+          </button>
+          <button onclick="bukaTab('pejabat')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg">🏠</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Tuan Pesta</span>
+          </button>
+          <button onclick="bukaTab('statistik')" class="flex flex-col items-center gap-1.5">
+            <span class="w-11 h-11 rounded-2xl bg-violet-50 text-violet-700 flex items-center justify-center text-lg">📈</span>
+            <span class="text-[11px] font-semibold text-slate-700 leading-tight">Grafik</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Banner Info Acara & Tuan Pesta -->
+      <div class="px-4 mt-5">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-slate-900">Informasi Acara</h2>
+          <button onclick="bukaTab('pejabat')" class="text-[11px] font-bold text-[#4b1eb8]">Detail panitia</button>
+        </div>
+        <div class="hero-purple text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
+          <div class="space-y-1 min-w-0">
+            <span class="inline-block text-[10px] font-bold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">PESTA AKTIF</span>
+            <p id="bannerAcara" class="text-sm font-extrabold truncate">Memuat acara...</p>
+            <p id="bannerPejabat" class="text-[11px] text-purple-200 truncate">Tuan Pesta: - • Ketua: -</p>
+          </div>
+          <div class="text-3xl shrink-0">🎉</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: STATISTIK & GRAFIK -->
+    <section id="tab-statistik" class="hidden px-4 pt-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <button onclick="bukaTab('home')" class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700">‹</button>
+        <h1 class="text-base font-extrabold text-slate-900">Statistik</h1>
+        <div class="w-9"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-100 text-center">
+        <p class="text-xs text-slate-500 font-medium">Total Cash & Beras Terkumpul</p>
+        <p id="statTotalCash" class="text-2xl font-extrabold text-[#4b1eb8] mt-1">Rp 0</p>
+        <p id="statTotalBeras" class="text-xs font-bold text-emerald-700 mt-0.5">0 Kg Beras</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-100">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-extrabold text-slate-800">Overview Per Sesi Pesta</h2>
+          <span class="text-[10px] font-bold bg-purple-50 text-[#4b1eb8] px-2.5 py-1 rounded-full">Cash & Beras</span>
+        </div>
+        <div class="h-48">
+          <canvas id="wargaBarChart"></canvas>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="hero-purple text-white rounded-2xl p-4 shadow">
+          <span class="inline-flex w-7 h-7 rounded-full bg-white/20 items-center justify-center text-xs mb-2">↓</span>
+          <p class="text-[11px] text-purple-200">Sudah Setor</p>
+          <p id="statSudahSetor" class="text-lg font-extrabold mt-0.5">0 Warga</p>
+        </div>
+        <div class="bg-[#6c3ce9] text-white rounded-2xl p-4 shadow">
+          <span class="inline-flex w-7 h-7 rounded-full bg-white/20 items-center justify-center text-xs mb-2">↑</span>
+          <p class="text-[11px] text-purple-100">Belum Setor</p>
+          <p id="statBelumSetor" class="text-lg font-extrabold mt-0.5">0 Warga</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: DAFTAR WARGA -->
+    <section id="tab-warga" class="hidden px-4 pt-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <button onclick="bukaTab('home')" class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700">‹</button>
+        <h1 class="text-base font-extrabold text-slate-900">Daftar Warga</h1>
+        <span id="badgeCountWarga" class="text-xs font-extrabold text-[#4b1eb8] bg-purple-100 px-2.5 py-1 rounded-full">0</span>
+      </div>
+
+      <input type="text" id="cariWargaInput" oninput="renderWarga()" placeholder="🔍 Cari nama warga atau status..."
+        class="w-full bg-white border border-purple-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold shadow-sm focus:outline-none focus:border-[#4b1eb8]">
+
+      <div id="listWargaSetoran" class="space-y-2.5"></div>
+    </section>
+
+    <!-- TAB 4: RIWAYAT SETORAN -->
+    <section id="tab-struk" class="hidden px-4 pt-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <button onclick="bukaTab('home')" class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700">‹</button>
+        <h1 class="text-base font-extrabold text-slate-900">Riwayat Setoran</h1>
+        <button onclick="bukaTab('tindis')" class="text-[11px] font-bold text-[#4b1eb8] bg-purple-100 px-2.5 py-1 rounded-full">Tindis</button>
+      </div>
+
+      <div id="listRiwayatStruk" class="space-y-2.5"></div>
+    </section>
+
+    <!-- TAB 5: PANITIA & BELUM BAYAR -->
+    <section id="tab-pejabat" class="hidden px-4 pt-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <button onclick="bukaTab('home')" class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700">‹</button>
+        <h1 class="text-base font-extrabold text-slate-900">Info Panitia & Pesta</h1>
+        <div class="w-9"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-100 space-y-3 text-xs">
+        <div class="border-b border-slate-100 pb-2">
+          <p class="text-[10px] uppercase font-bold text-slate-400">Acara / Keterangan</p>
+          <p id="infoAcaraWarga" class="font-extrabold text-slate-900 text-sm mt-0.5">-</p>
+        </div>
+        <div class="flex justify-between items-center py-1 border-b border-slate-100">
+          <span class="text-slate-500 font-semibold">Tuan Pesta</span>
+          <span id="infoTuanPestaWarga" class="font-extrabold text-[#4b1eb8]">-</span>
+        </div>
+        <div class="flex justify-between items-center py-1 border-b border-slate-100">
+          <span class="text-slate-500 font-semibold">Ketua Pelaksana</span>
+          <span id="infoKetuaWarga" class="font-extrabold text-slate-900">-</span>
+        </div>
+        <div class="flex justify-between items-center py-1 border-b border-slate-100">
+          <span class="text-slate-500 font-semibold">Bendahara</span>
+          <span id="infoBendaharaWarga" class="font-extrabold text-emerald-700">-</span>
+        </div>
+        <div class="flex justify-between items-center py-1">
+          <span class="text-slate-500 font-semibold">Tanggal Pesta</span>
+          <span id="infoTanggalWarga" class="font-bold text-slate-700">-</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-purple-100">
+        <h2 class="text-xs font-extrabold text-slate-800 mb-2">Daftar Belum Bayar</h2>
+        <div id="listBelumWarga" class="divide-y divide-slate-100 text-xs"></div>
+      </div>
+    </section>
+
+    <!-- SUB-VIEW BAKU TINDIS -->
+    <section id="tab-tindis" class="hidden px-4 pt-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <button onclick="bukaTab('home')" class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700">‹</button>
+        <h1 class="text-base font-extrabold text-slate-900">Baku Tindis (Kelebihan)</h1>
+        <div class="w-9"></div>
+      </div>
+      <div id="listTindisWarga" class="space-y-2.5"></div>
+    </section>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-white border-t border-purple-100 px-3 py-2 flex items-center justify-around z-30 shadow-[0_-6px_24px_rgba(45,12,126,0.08)]">
+      <button onclick="bukaTab('home')" id="bnav-home" class="flex flex-col items-center gap-0.5 text-[#4b1eb8] font-bold text-[10px] py-1 px-2">
+        <span class="text-base">🏠</span>
+        <span>Home</span>
+      </button>
+
+      <button onclick="bukaTab('statistik')" id="bnav-statistik" class="flex flex-col items-center gap-0.5 text-slate-400 font-semibold text-[10px] py-1 px-2">
+        <span class="text-base">📊</span>
+        <span>Statistik</span>
+      </button>
+
+      <button onclick="bukaTab('warga')" id="bnav-warga"
+        class="nav-fab -mt-7 w-12 h-12 rounded-2xl text-white flex items-center justify-center text-lg shadow-lg active:scale-95 transition"
+        title="Daftar Warga">
+        👥
+      </button>
+
+      <button onclick="bukaTab('struk')" id="bnav-struk" class="flex flex-col items-center gap-0.5 text-slate-400 font-semibold text-[10px] py-1 px-2">
+        <span class="text-base">🧾</span>
+        <span>Riwayat</span>
+      </button>
+
+      <button onclick="bukaTab('pejabat')" id="bnav-pejabat" class="flex flex-col items-center gap-0.5 text-slate-400 font-semibold text-[10px] py-1 px-2">
+        <span class="text-base">👤</span>
+        <span>Panitia</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbz7L4cs38WWWUD1EEl7VrdAhRNxjEvvDybvxx1zs7dOmwVjaLnOYZD5Vx10EsMrGh_NZg/exec";
+    let wargaData = { standar: { uang: 150000, beras: 5 }, anggota: [], jadwal: [], transaksi: [] };
+    let wargaChart = null;
+
+    const STORAGE_KETUA_MAP = "waerua_ketua_pesta_map_v1";
+    const STORAGE_BENDAHARA_MAP = "waerua_bendahara_pesta_map_v1";
+
+    function getKetuaPesta(jadwal) {
+      if (!jadwal) return "-";
+      try {
+        const m = JSON.parse(localStorage.getItem(STORAGE_KETUA_MAP) || "{}");
+        if (m[jadwal.ID_Pesta]) return m[jadwal.ID_Pesta];
+      } catch (e) {}
+      return (jadwal.Ketua_Pelaksana && String(jadwal.Ketua_Pelaksana).trim() !== "-")
+        ? String(jadwal.Ketua_Pelaksana).trim() : "-";
+    }
+
+    function getBendaharaPesta(jadwal) {
+      if (!jadwal) return "-";
+      try {
+        const m = JSON.parse(localStorage.getItem(STORAGE_BENDAHARA_MAP) || "{}");
+        if (m[jadwal.ID_Pesta]) return m[jadwal.ID_Pesta];
+      } catch (e) {}
+      return "-";
+    }
+
+    const allTabs = ["home", "statistik", "warga", "struk", "pejabat", "tindis"];
+    function bukaTab(tab) {
+      allTabs.forEach(t => {
+        const el = document.getElementById("tab-" + t);
+        if (el) el.classList.add("hidden");
+      });
+      const target = document.getElementById("tab-" + tab);
+      if (target) target.classList.remove("hidden");
+
+      ["home", "statistik", "struk", "pejabat"].forEach(n => {
+        const btn = document.getElementById("bnav-" + n);
+        if (!btn) return;
+        const aktif = n === tab;
+        btn.className = aktif
+          ? "flex flex-col items-center gap-0.5 text-[#4b1eb8] font-bold text-[10px] py-1 px-2"
+          : "flex flex-col items-center gap-0.5 text-slate-400 font-semibold text-[10px] py-1 px-2";
+      });
+
+      if (tab === "statistik") renderStatistikChart();
+    }
+
+    function formatRp(n) {
+      return "Rp " + Number(n || 0).toLocaleString("id-ID");
+    }
+
+    function formatLabelPesta(j) {
+      if (!j) return "Belum ada jadwal pesta";
+      const ket = j.Keterangan && j.Keterangan !== "-" ? ` — ${j.Keterangan}` : "";
+      const tgl = j.Tanggal_Acara ? ` (${String(j.Tanggal_Acara).slice(0, 10)})` : "";
+      return `${j.Nama_Tuan_Rumah}${ket}${tgl}`;
+    }
+
+    async function muatDataWarga() {
+      try {
+        const res = await fetch(API_URL);
+        wargaData = await res.json();
+
+        const sel = document.getElementById("selectPestaWarga");
+        const prev = sel.value;
+        if (!wargaData.jadwal || wargaData.jadwal.length === 0) {
+          sel.innerHTML = `<option value="" class="text-slate-900">Belum ada jadwal pesta</option>`;
+        } else {
+          sel.innerHTML = wargaData.jadwal.slice().reverse().map(j =>
+            `<option value="${j.ID_Pesta}" class="text-slate-900">${formatLabelPesta(j)}</option>`
+          ).join("");
+          if (prev) sel.value = prev;
+        }
+        renderWarga();
+      } catch (e) {
+        alert("Gagal memuat data dari server: " + e);
+      }
+    }
+
+    function hitungSetoranPesta(idPesta) {
+      const trx = (wargaData.transaksi || []).filter(t => t.ID_Pesta === idPesta);
+      let totUang = 0, totBeras = 0;
+      const mapBayar = {};
+
+      trx.forEach(t => {
+        const key = String(t.Nama_Penyetor || "").toLowerCase().trim();
+        if (!key) return;
+        const u = Number(t.Uang_Masuk) || 0;
+        const b = Number(t.Beras_Kg) || 0;
+        totUang += u;
+        totBeras += b;
+        if (!mapBayar[key]) mapBayar[key] = { nama: t.Nama_Penyetor, uang: 0, beras: 0 };
+        mapBayar[key].uang += u;
+        mapBayar[key].beras += b;
+      });
+
+      const stdUang = Number(wargaData.standar?.uang) || 150000;
+      const stdBeras = Number(wargaData.standar?.beras) || 5;
+      const daftar = [];
+      const seen = new Set();
+
+      (wargaData.anggota || []).forEach(a => {
+        const key = String(a.Nama_Lengkap || "").toLowerCase().trim();
+        if (!key) return;
+        seen.add(key);
+        const p = mapBayar[key];
+        const sudah = Boolean(p);
+        const u = p ? p.uang : 0;
+        const b = p ? p.beras : 0;
+        const sU = sudah ? Math.max(0, u - stdUang) : 0;
+        const sB = sudah ? Math.max(0, b - stdBeras) : 0;
+
+        let status = "Belum Bayar";
+        if (sudah) {
+          if (u < stdUang || b < stdBeras) status = "Kurang";
+          else if (sU > 0 || sB > 0) status = "Lunas+";
+          else status = "Lunas";
+        }
+        daftar.push({ nama: a.Nama_Lengkap, kelompok: a.Kelompok_Keluarga || "Warga", sudah, u, b, sU, sB, status });
+      });
+
+      Object.entries(mapBayar).forEach(([key, p]) => {
+        if (!seen.has(key)) {
+          const sU = Math.max(0, p.uang - stdUang);
+          const sB = Math.max(0, p.beras - stdBeras);
+          let status = "Lunas";
+          if (p.uang < stdUang || p.beras < stdBeras) status = "Kurang";
+          else if (sU > 0 || sB > 0) status = "Lunas+";
+          daftar.push({ nama: p.nama, kelompok: "Warga", sudah: true, u: p.uang, b: p.beras, sU, sB, status });
+        }
+      });
+
+      const sudahArr = daftar.filter(x => x.sudah);
+      const belumArr = daftar.filter(x => !x.sudah);
+      return { daftar, sudahArr, belumArr, totUang, totBeras, trx };
+    }
+
+    function renderWarga() {
+      const idPesta = document.getElementById("selectPestaWarga").value;
+      const jadwal = (wargaData.jadwal || []).find(j => j.ID_Pesta === idPesta);
+      const q = (document.getElementById("cariWargaInput")?.value || "").trim().toLowerCase();
+      const { daftar, sudahArr, belumArr, totUang, totBeras, trx } = hitungSetoranPesta(idPesta);
+
+      const tuanPesta = jadwal ? jadwal.Nama_Tuan_Rumah : "-";
+      const ketua = getKetuaPesta(jadwal);
+      const bendahara = getBendaharaPesta(jadwal);
+      const acara = (jadwal && jadwal.Keterangan && jadwal.Keterangan !== "-") ? jadwal.Keterangan : "Arisan Pesta Wáe Rua";
+      const tgl = (jadwal && jadwal.Tanggal_Acara) ? String(jadwal.Tanggal_Acara).slice(0, 10) : "-";
+
+      document.getElementById("heroCash").textContent = formatRp(totUang);
+      document.getElementById("heroSubPesta").textContent = `Beras: ${totBeras} Kg • Sudah Setor: ${sudahArr.length} / ${daftar.length}`;
+      document.getElementById("bannerAcara").textContent = `${acara} — ${tuanPesta}`;
+      document.getElementById("bannerPejabat").textContent = `Ketua: ${ketua} • Bendahara: ${bendahara}`;
+
+      document.getElementById("statTotalCash").textContent = formatRp(totUang);
+      document.getElementById("statTotalBeras").textContent = `${totBeras} Kg Beras`;
+      document.getElementById("statSudahSetor").textContent = `${sudahArr.length} Warga`;
+      document.getElementById("statBelumSetor").textContent = `${belumArr.length} Warga`;
+      document.getElementById("badgeCountWarga").textContent = `${daftar.length} Warga`;
+
+      document.getElementById("infoAcaraWarga").textContent = acara;
+      document.getElementById("infoTuanPestaWarga").textContent = tuanPesta;
+      document.getElementById("infoKetuaWarga").textContent = ketua;
+      document.getElementById("infoBendaharaWarga").textContent = bendahara;
+      document.getElementById("infoTanggalWarga").textContent = tgl;
+
+      const filtered = q
+        ? daftar.filter(d => d.nama.toLowerCase().includes(q) || d.status.toLowerCase().includes(q) || d.kelompok.toLowerCase().includes(q))
+        : daftar;
+
+      document.getElementById("listWargaSetoran").innerHTML = filtered.length === 0
+        ? `<div class="bg-white rounded-2xl p-6 text-center text-xs text-slate-400">Tidak ada data warga ditampilkan.</div>`
+        : filtered.map(d => {
+          let pill = "bg-rose-100 text-rose-700";
+          if (d.status === "Lunas") pill = "bg-emerald-100 text-emerald-700";
+          else if (d.status === "Lunas+") pill = "bg-amber-100 text-amber-800";
+          else if (d.status === "Kurang") pill = "bg-purple-100 text-purple-800";
+
+          const inisial = d.nama.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase();
+          return `
+            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-purple-100/70 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-purple-100 text-[#4b1eb8] font-extrabold text-xs flex items-center justify-center shrink-0">
+                  ${inisial || "W"}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-extrabold text-slate-900 truncate">${d.nama}</p>
+                  <p class="text-[11px] text-slate-500">
+                    ${d.sudah ? `${formatRp(d.u)} • ${d.b} Kg` : "Belum menyetor cash & beras"}
+                  </p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold shrink-0 ${pill}">${d.status}</span>
+            </div>`;
+        }).join("");
+
+      document.getElementById("listRiwayatStruk").innerHTML = trx.length === 0
+        ? `<div class="bg-white rounded-2xl p-6 text-center text-xs text-slate-400">Belum ada setoran yang diinput admin pada sesi ini.</div>`
+        : trx.slice().reverse().map(t => `
+          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-purple-100/70 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-xs font-extrabold text-slate-900">${t.Nama_Penyetor}</p>
+              <p class="text-[11px] text-emerald-700 font-bold mt-0.5">${formatRp(t.Uang_Masuk)} • ${Number(t.Beras_Kg) || 0} Kg</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">${t.Status || "Tercatat"}</p>
+            </div>
+            <span class="text-xs font-extrabold text-[#4b1eb8] bg-purple-50 px-2.5 py-1 rounded-xl">✓ Masuk</span>
+          </div>`).join("");
+
+      document.getElementById("listBelumWarga").innerHTML = belumArr.length === 0
+        ? `<p class="py-4 text-center text-slate-400">Semua warga sudah menyetor.</p>`
+        : belumArr.map(b => `
+          <div class="py-2 flex items-center justify-between">
+            <span class="font-bold text-slate-800">${b.nama}</span>
+            <span class="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">Belum Bayar</span>
+          </div>`).join("");
+
+      const tindisArr = daftar.filter(d => d.sU > 0 || d.sB > 0);
+      document.getElementById("listTindisWarga").innerHTML = tindisArr.length === 0
+        ? `<div class="bg-white rounded-2xl p-6 text-center text-xs text-slate-400">Belum ada kelebihan setoran (Baku Tindis).</div>`
+        : tindisArr.map(d => `
+          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-amber-200 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-extrabold text-slate-900">${d.nama}</p>
+              <p class="text-[11px] text-amber-800 font-bold mt-0.5">+${formatRp(d.sU)} • +${d.sB} Kg</p>
+            </div>
+            <span class="text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full">Lunas+</span>
+          </div>`).join("");
+
+      if (!document.getElementById("tab-statistik").classList.contains("hidden")) {
+        renderStatistikChart();
+      }
+    }
+
+    function renderStatistikChart() {
+      const ctx = document.getElementById("wargaBarChart");
+      if (!ctx) return;
+      const jadwalList = (wargaData.jadwal || []).slice(-6);
+      const labels = jadwalList.map(j => j.Nama_Tuan_Rumah);
+      const cashRibu = jadwalList.map(j =>
+        (wargaData.transaksi || []).filter(t => t.ID_Pesta === j.ID_Pesta).reduce((s, r) => s + (Number(r.Uang_Masuk) || 0), 0) / 1000
+      );
+      const berasKg = jadwalList.map(j =>
+        (wargaData.transaksi || []).filter(t => t.ID_Pesta === j.ID_Pesta).reduce((s, r) => s + (Number(r.Beras_Kg) || 0), 0)
+      );
+
+      if (wargaChart) wargaChart.destroy();
+      wargaChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels.length ? labels : ["Pesta"],
+          datasets: [
+            { label: "Cash (Ribu)", data: cashRibu.length ? cashRibu : [0], backgroundColor: "#2d0c7e", borderRadius: 6 },
+            { label: "Beras (Kg)", data: berasKg.length ? berasKg : [0], backgroundColor: "#7c4dff", borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } },
+          scales: { x: { ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } }
+        }
+      });
+    }
+
+    muatDataWarga();
+  </script>
+</body>
+</html>
